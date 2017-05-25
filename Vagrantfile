@@ -4,18 +4,20 @@
 
 Vagrant.configure("2") do |config|
 
-    config.vm.box = "ubuntu/trusty64"
+    config.vm.box = "google/gce"
     config.ssh.forward_agent = true
-    # eth1, this will be the endpoint
-    config.vm.network :private_network, ip: "192.168.27.100"
-    # eth2, this will be the OpenStack "public" network
-    # ip and subnet mask should match floating_ip_range var in devstack.yml
-    config.vm.network :private_network, ip: "172.24.4.225", :netmask => "255.255.255.0", :auto_config => false
-    config.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--memory", 6144]
-        vb.customize ["modifyvm", :id, "--cpus", 2]
-       	# eth2 must be in promiscuous mode for floating IPs to be accessible
-       	vb.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+
+    config.vm.provider :google do |google, override|
+    google.google_project_id = "vagrant-168620"
+    google.google_client_email = "vagrant@vagrant-168620.iam.gserviceaccount.com"
+    google.google_json_key_location = "/Users/jruels/creds/vagrant-a46870ac43b5.json"
+    google.image = "ubuntu-1604-xenial-v20170516"
+    google.machine_type = "n1-standard-2"
+    google.disk_size = "30"
+    google.can_ip_forward = "true"
+
+    override.ssh.username = "jruels"
+    override.ssh.private_key_path = "/Users/jruels/.ssh/id_rsa"
     end
     config.vm.provision :ansible do |ansible|
         ansible.host_key_checking = false
